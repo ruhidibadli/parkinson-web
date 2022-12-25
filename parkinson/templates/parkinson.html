@@ -1,0 +1,137 @@
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    
+    <h1 style="text-align: center;">Parkinson Test Site</h1>
+
+    <form method="" id="parkinson_div" class="col-md-6" style="margin-left: 25%; margin-bottom: 5%; margin-top: 2%; background-color: gray;">
+        <fieldset class="form-control">
+        <label for="ppe">PPE:</label>
+        <input type="text" id="ppe">
+        </fieldset>
+        <fieldset class="form-control">
+        <label for="shimmerapq5">Shimmer:APQ5 :</label>
+        <input type="text" id="shimmerapq5" required>
+        </fieldset>
+        <fieldset class="form-control">
+        <label for="mdvpshimmer">MDVP:Shimmer :</label>
+        <input type="text" id="mdvpshimmer" required>
+        </fieldset>
+        <fieldset class="form-control">
+        <label for="mdvpfo">MDVP:Fo(Hz) :</label>
+        <input type="text" id="mdvpfo" required>
+        </fieldset>
+        <fieldset class="form-control">
+        <label for="mdvpfhi">MDVP:Fhi(Hz) :</label>
+        <input type="text" id="mdvpfhi" required>
+        </fieldset>
+        <fieldset class="form-control">
+        <label for="mdvpflo">MDVP:Flo(Hz) :</label>
+        <input type="text" id="mdvpflo" required>
+        </fieldset>
+        <fieldset class="form-control">
+        <label for="rpde">RPDE:</label>
+        <input type="text" id="rpde" required>
+        </fieldset>
+        
+        <fieldset>
+        <button id="parkinson_btn" onclick="control_parkinson()">Control</button>
+        </fieldset>
+    </form>
+<br>
+<div class="col-md-12">
+    <table class="table table-dark">
+        <thead>
+            <tr>
+            <th scope="col">PPE</th>
+            <th scope="col">Shimmer:APQ5</th>
+            <th scope="col">MDVP:Fo(Hz)</th>
+            <th scope="col">MDVP:Shimmer</th>
+            <th scope="col">MDVP:Fhi(Hz)</th>
+            <th scope="col">MDVP:Flo(Hz)</th>
+            <th scope="col">RPDE</th>
+            <th scope="col">Tested Date</th>
+            <th scope="col">Result</th>
+            </tr>
+        </thead>
+        <tbody id="result_body">
+            
+        </tbody>
+        </table>
+</div>
+</body>
+<script>
+    function control_parkinson(){
+        var ppe = document.getElementById('ppe').value
+        var shimmerapq5 = document.getElementById('shimmerapq5').value
+        var mdvpfo = document.getElementById('mdvpfo').value
+        var mdvpshimmer = document.getElementById('mdvpshimmer').value
+        var mdvpflo = document.getElementById('mdvpflo').value
+        var mdvpfhi = document.getElementById('mdvpfhi').value
+        var rpde = document.getElementById('rpde').value
+
+        var xhr = new XMLHttpRequest()
+        xhr.open("POST", "{% url 'control_parkinson' %}", true)
+
+
+        xhr.onload = function(){
+            if(xhr.status == 200){
+                var datas = JSON.parse(this.response)
+                console.log(datas)
+                document.getElementById('parkinson_div').reset()
+                get_datas()
+            }
+            else{
+                console.log("ERROR")
+            }
+        }
+
+        xhr.send(JSON.stringify({'ppe':ppe, 'shimmerapq5':shimmerapq5, 'mdvpfo':mdvpfo, 'mdvpshimmer':mdvpshimmer, 'mdvpflo':mdvpflo, 'mdvpfhi':mdvpfhi, 'rpde':rpde}))
+    }
+
+
+    function get_datas(){
+        var xhr = new XMLHttpRequest()
+        xhr.open("GET", "{% url 'get_datas' %}", true)
+
+        xhr.onload = function(){
+            if(xhr.status == 200){
+                var datas = JSON.parse(this.response)
+                console.log(datas)
+
+                document.getElementById('result_body').innerHTML = ''
+
+                for(var i in datas['data']){
+                    document.getElementById('result_body').innerHTML += `
+                    <tr>
+                        <td scope="row">${datas['data'][i]['PPE']}</td>
+                        <td>${datas['data'][i]['Shimmer_APQ5']}</td>
+                        <td>${datas['data'][i]['MDVP_FO']}</td>
+                        <td>${datas['data'][i]['MDVP_Shimmer']}</td>
+                        <td>${datas['data'][i]['MDVP_Fhi']}</td>
+                        <td>${datas['data'][i]['MDVP_Flo']}</td>
+                        <td>${datas['data'][i]['RPDE']}</td>
+                        <td>${datas['data'][i]['created_date']}</td>
+                        <td>${datas['data'][i]['is_parkinson']}</td>
+                    </tr>
+                    `
+                }
+            }
+        }
+
+
+        xhr.send()
+    }
+
+
+    window.onload = function(){
+        get_datas()
+    }
+
+
+</script>
